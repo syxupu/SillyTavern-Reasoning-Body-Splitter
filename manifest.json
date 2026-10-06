@@ -1,0 +1,11 @@
+{
+    "display_name": "回复定稿",
+    "loading_order": 200,
+    "requires": [],
+    "optional": [],
+    "js": "index.js",
+    "css": "style.css",
+    "author": "Codex",
+    "version": "1.0.4",
+    "auto_update": false
+}

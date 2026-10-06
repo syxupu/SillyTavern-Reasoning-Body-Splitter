@@ -1,0 +1,8 @@
+#reply-finalizer-bar { display: flex; align-items: center; color: var(--SmartThemeBodyColor); margin: 0; padding: 0; }
+#reply-finalizer-bar[hidden], #reply-finalizer-preview[hidden] { display: none !important; }
+.reply-finalizer-actions { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+.reply-finalizer-actions button { background: transparent; color: var(--SmartThemeBodyColor); border: 1px solid var(--SmartThemeBorderColor); border-radius: 10px; padding: 3px 5px; margin: 3px 0; cursor: pointer; }
+.reply-finalizer-actions button:disabled { opacity: .5; cursor: not-allowed; }
+#reply-finalizer-status { font-size: .8em; opacity: .8; max-width: 8em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#reply-finalizer-preview { order: 2; flex: 1 0 100%; box-sizing: border-box; margin: 3px 8px 6px; }
+#reply-finalizer-preview textarea { box-sizing: border-box; width: 100%; min-height: 160px; max-height: 45vh; resize: vertical; }
