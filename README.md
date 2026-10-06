@@ -1,4 +1,4 @@
-# 回复定稿（ReplyFinalizer）
+# 思考正文分离器（Reasoning Body Splitter）
 
 适用于 SillyTavern 的前端扩展。在最新一条 AI 回复生成后，提供 **分离思考** 和 **✓** 两个按钮，让你先检查回复，再决定何时定稿。已在 SillyTavern 1.16.0 上测试。
 
@@ -11,7 +11,7 @@
 在酒馆中打开 **扩展 → 安装扩展**，粘贴此仓库的 Git 地址：
 
 ```text
-https://github.com/syxupu/SillyTavern-ReplyFinalizer.git
+https://github.com/syxupu/SillyTavern-Reasoning-Body-Splitter.git
 ```
 
 安装后刷新酒馆页面。按钮会出现在聊天输入栏上方的快捷回复栏中；如果没有快捷回复栏，则显示在输入框上方。
@@ -27,7 +27,7 @@ https://github.com/syxupu/SillyTavern-ReplyFinalizer.git
 
 插件只处理当前聊天的最新 AI 回复及当前 swipe。正文为空且无法可靠提取剧情时，不能定稿；请重抽或手工补正文。分离的规则优先识别 `<thinking>` 等边界；必要时调用当前聊天使用的模型定位原文片段，模型结果仍须通过原文精确匹配。
 
-**小白盒提示：**独立安装本扩展不包含小白盒循环任务及故事总结的桥接修改，未适配的小白盒可能在定稿前读取初稿。
+> 小白盒提示：独立安装本扩展不包含小白盒循环任务及故事总结的桥接修改，未适配的小白盒可能在定稿前读取初稿。
 
 ## 开发检查
 

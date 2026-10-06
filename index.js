@@ -32,7 +32,7 @@ function setMarker(t, marker) {
     if (info) { info.extra ??= {}; info.extra[KEY] = structuredClone(marker); }
 }
 function notify(message, level = 'info') {
-    globalThis.toastr?.[level]?.(message, '回复定稿');
+    globalThis.toastr?.[level]?.(message, '思考正文分离器');
     setStatus(message);
 }
 function setStatus(message) {
@@ -114,7 +114,7 @@ async function ensureConsumersReleased() {
         if (pendingGenerationResolve) { pendingGenerationResolve(); pendingGenerationResolve = null; }
         return true;
     } catch (error) {
-        try { await markReleaseState(t, 'failed'); } catch (saveError) { console.error('[回复定稿] 保存总结失败状态时出错', saveError); }
+        try { await markReleaseState(t, 'failed'); } catch (saveError) { console.error('[思考正文分离器] 保存总结失败状态时出错', saveError); }
         render();
         notify(error.message || String(error), 'error');
         return false;
@@ -255,7 +255,7 @@ async function commit() {
         render();
         try { await releaseConsumers(t); await markReleaseState(t, 'complete'); }
         catch (error) {
-            try { await markReleaseState(t, 'failed'); } catch (saveError) { console.error('[回复定稿] 保存总结失败状态时出错', saveError); }
+            try { await markReleaseState(t, 'failed'); } catch (saveError) { console.error('[思考正文分离器] 保存总结失败状态时出错', saveError); }
             throw error;
         }
         if (pendingGenerationResolve) { pendingGenerationResolve(); pendingGenerationResolve = null; }
