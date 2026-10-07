@@ -1,6 +1,6 @@
-import { eventSource, event_types, generateRaw, updateMessageBlock, saveChatConditional } from '/script.js';
+import { eventSource, event_types, updateMessageBlock, saveChatConditional } from '/script.js';
 import { getContext } from '/scripts/extensions.js';
-import { hasVisibleProse, isPending, messageFingerprint, parseJsonAnswer, rebaseDraft, splitReasoning } from './lib/logic.mjs';
+import { hasVisibleProse, isPending, messageFingerprint, rebaseDraft, splitReasoning } from './lib/logic.mjs';
 
 const KEY = 'reply_finalizer';
 const EVENT = 'reply-finalizer:release';
@@ -150,59 +150,20 @@ function ensureDraft() {
     return { t, draft };
 }
 
-function extractJson(raw) {
-    try { return parseJsonAnswer(raw); }
-    catch { throw new Error('模型没有返回有效 JSON，未改变回复'); }
-}
-
-async function callModel(system, payload) {
-    const result = await generateRaw({
-        systemPrompt: system,
-        prompt: JSON.stringify(payload),
-        responseLength: 4096,
-        trimNames: false,
-    });
-    return extractJson(result);
-}
-
-async function separate({ silent = false } = {}) {
-    const original = lastPending();
-    if (!original) throw new Error('当前最新回复没有待定稿版本');
-    const originalKey = keyOf(original);
-    for (let attempt = 0; attempt < 3; attempt++) {
-        const { t, draft: d } = ensureDraft();
-        if (keyOf(t) !== originalKey) throw new Error('聊天或 swipe 已切换，分离已取消');
-        if (d.separated) {
-            if (!silent) notify('当前分离预览已是最新版本；检查后按 ✓ 定稿');
-            return;
-        }
-        let separated = splitReasoning(d.body, d.reasoning);
-        if (!separated && !d.body.trim() && d.reasoning.trim()) {
-            const answer = await callModel(
-                '从思考文本中寻找已经写成的连续剧情正文。只返回 JSON：{"startQuote":"正文开头连续原文至少20字","endQuote":"正文结尾连续原文至少20字"}。没有明确剧情则返回 {"startQuote":"","endQuote":""}。不得创作或改写。',
-                { reasoning: d.reasoning },
-            );
-            const start = String(answer?.startQuote ?? '');
-            const end = String(answer?.endQuote ?? '');
-            const from = start.length >= 20 ? d.reasoning.indexOf(start) : -1;
-            const to = end.length >= 20 ? d.reasoning.lastIndexOf(end) : -1;
-            if (from >= 0 && to >= from && d.reasoning.indexOf(start, from + 1) < 0 && d.reasoning.indexOf(end) === to) {
-                const extracted = d.reasoning.slice(from, to + end.length).trim();
-                if (extracted.length >= 30 && /[。！？.!?]/.test(extracted)) {
-                    separated = { body: extracted, reasoning: `${d.reasoning.slice(0, from)}${d.reasoning.slice(to + end.length)}`.trim(), mode: 'exact-quote' };
-                }
-            }
-        }
-        if (!sameTarget(t, d) || draft !== d) continue;
-        if (!separated) throw new Error('没有找到可可靠搬移的连续剧情正文');
-        d.body = separated.body;
-        d.reasoning = separated.reasoning;
-        d.separated = true;
-        render();
-        if (!silent) notify('已生成分离预览；检查后按 ✓ 定稿');
+function separate({ silent = false } = {}) {
+    const { t, draft: d } = ensureDraft();
+    if (d.separated) {
+        if (!silent) notify('当前分离预览已是最新版本；检查后按 ✓ 定稿');
         return;
     }
-    throw new Error('回复在分离期间持续变化，请稍后重试');
+    const separated = splitReasoning(d.body, d.reasoning);
+    if (!sameTarget(t, d) || draft !== d) throw new Error('回复已变化，请重试分离');
+    if (!separated) throw new Error('没有找到可可靠搬移的正文边界（如 </thinking>）');
+    d.body = separated.body;
+    d.reasoning = separated.reasoning;
+    d.separated = true;
+    render();
+    if (!silent) notify('已生成分离预览；检查后按 ✓ 定稿');
 }
 
 async function commit() {
@@ -218,7 +179,7 @@ async function commit() {
             ({ t, draft: d } = ensureDraft());
             if (keyOf(t) !== originalKey) throw new Error('聊天或 swipe 已切换，定稿已取消');
             if (hadSeparation && !d.separated && (!hasVisibleProse(d.body) || splitReasoning(d.body, d.reasoning))) {
-                await separate({ silent: true });
+                separate({ silent: true });
             }
             ({ t, draft: d } = ensureDraft());
             if (keyOf(t) !== originalKey) throw new Error('聊天或 swipe 已切换，定稿已取消');
@@ -359,7 +320,7 @@ function mount() {
             if (!action || busy) return;
             busy = true; render();
             try {
-                if (action === 'separate') await separate();
+                if (action === 'separate') separate();
                 if (action === 'commit') { busy = false; await commit(); }
             } catch (error) { notify(error.message || String(error), 'error'); }
             finally { busy = false; render(); }

@@ -8,6 +8,13 @@ test('only existing prose moves out of reasoning', () => {
     assert.equal(result.body, '下午四点，姜来走进教室。她看见了桌上的信。');
     assert.ok(reasoning.includes(result.body));
     assert.equal(splitReasoning('', '梗概：两人见面。'), null);
+    assert.equal(splitReasoning('', '下午四点，姜来走进教室。她看见了桌上的信，但文本里没有思考结束标签。'), null);
+});
+
+test('explicit body labels are accepted as boundaries without an API call', () => {
+    const result = splitReasoning('', '梗概：两人见面。\n正文：下午四点，姜来走进教室。她看见了桌上的信。');
+    assert.equal(result.body, '下午四点，姜来走进教室。她看见了桌上的信。');
+    assert.equal(splitReasoning('', '梗概\n</thinking>她来了').body, '她来了');
 });
 
 test('embedded thinking can be moved without rewriting story', () => {
